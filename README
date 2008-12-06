@@ -1,0 +1,15 @@
+This is neo4j-clojure, a convenience wrapper around neo4j.
+
+Neo4j (http://neo4j.org/) is a graph-structured on-disk transactional database.
+
+Usage:
+
+(use 'neo4j)
+
+(with-neo "test"
+  (tx
+    (let [c (new-node) b (new-node)]
+      (relate (top-node) :customers c)
+      (relate c :customer b)
+      (.setProperty "name" b "Bob")
+      (success))))
