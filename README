@@ -1,6 +1,6 @@
 This is neo4j-clojure, a convenience wrapper around neo4j.
 
-Neo4j (http://neo4j.org/) is a graph-structured on-disk transactional database.
+Neo4j (http://neo4j.org/ ) is a graph-structured on-disk transactional database.
 
 Usage:
 

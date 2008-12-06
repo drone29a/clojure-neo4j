@@ -15,8 +15,7 @@
   <target name="jar"
           description="Create jar file.">
     <jar jarfile="${jarfile}">
-      <fileset dir="." includes="CPL.TXT"/>
-      <fileset dir="./src" includes="neo4j/**/*.clj"/>
+      <fileset dir="./src" includes="**/*.clj"/>
     </jar>
   </target>
 
