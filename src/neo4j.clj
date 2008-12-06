@@ -54,7 +54,7 @@
     (name [] (name n))))
 
 (defn relate [#^Node from #^Keyword type #^Node to]
-  (.createRelationship from to (relationship type)))
+  (.createRelationshipTo from to (relationship type)))
 
 (defn return-if [f]
   (proxy [ReturnableEvaluator] []
