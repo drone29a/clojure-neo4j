@@ -11,5 +11,5 @@ Usage:
     (let [c (new-node) b (new-node)]
       (relate (top-node) :customers c)
       (relate c :customer b)
-      (.setProperty "name" b "Bob")
+      (.setProperty b "name" "Bob")
       (success))))
