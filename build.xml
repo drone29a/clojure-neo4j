@@ -1,11 +1,11 @@
-<project name="neo4j-clojure" default="jar">
+<project name="clojure-neo4j" default="jar">
 
   <description>
-    Pack all neo4j-clojure sources into a JAR.
+    Pack all clojure-neo4j sources into a JAR.
   </description>
 
   <!-- The JAR file to create. -->
-  <property name="jarfile" location="neo4j-clojure.jar"/>
+  <property name="jarfile" location="clojure-neo4j.jar"/>
 
   <target name="clean"
           description="Remove generated files and directories.">
