@@ -45,7 +45,11 @@
 
 (defn failure [] (.failure *tx*))
 
-(defn new-node [] (.createNode *neo*))
+(defn new-node 
+  ([] (.createNode *neo*))
+  ([props] (let [node (new-node)]
+             (doseq [[k v] props]
+               (.setProperty node k v)))))
 
 (defn top-node [] (.getReferenceNode *neo*))
 
