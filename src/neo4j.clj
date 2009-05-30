@@ -45,11 +45,17 @@
 
 (defn failure [] (.failure *tx*))
 
+(defn name-or-str
+  [x]
+  (if (keyword? x) 
+    (name x) 
+    (str x)))
+
 (defn new-node 
   ([] (.createNode *neo*))
   ([props] (let [node (new-node)]
-             (doseq [[k v] props]
-               (.setProperty node k v)))))
+             (set-properties node props)
+             node)))
 
 (defn top-node [] (.getReferenceNode *neo*))
 
@@ -67,3 +73,28 @@
 (defn stop-if [f]
   (proxy [StopEvaluator] []
     (isStopNode [#^TraversalPosition p] (f p))))
+
+(defn property
+  [#^PropertyContainer c key]
+  (.getProperty c (name key)))
+
+(defn properties 
+  "Return a map of properties."
+  [#^PropertyContainer c]
+  (let [ks (.getPropertyKeys c)]
+    (into {} (map (fn [k] [(keyword k) (.getProperty c k)]) ks))))
+
+(defn set-properties
+  "Set properties of a node or relationship."
+  [#^PropertyContainer c props]
+  (doseq [[k v] props]
+    (.setProperty c (name-or-str k) (or v "")))
+  nil)
+
+(defn node-delete 
+  "Delete the given node."
+  [#^Node n]
+  (if-let [rs (.getRelationships n)]
+    (doseq [r rs]
+      (.delete r)))
+  (.delete n))
