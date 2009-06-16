@@ -12,11 +12,11 @@ Usage:
 (with-tx
   (let [customer-root (new-node) 
         bob (new-node)]
-    (relate (top-node) :customers c)
-    (relate c :customer b)
-    (properties b {"name" "Bob"
-                   "age" 30
-                   "id" "C12345"})))
+    (relate (top-node) :customers customer-root)
+    (relate customer-root :customer bob)
+    (properties bob {"name" "Bob"
+                     "age" 30
+                     "id" "C12345"})))
 
 ;;; Fetch all customer IDs
 (with-tx
