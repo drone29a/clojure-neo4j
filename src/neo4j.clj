@@ -1,19 +1,18 @@
 (ns neo4j
-  (:import (org.neo4j.api.core Direction
-                               EmbeddedNeo
-                               NeoService
-                               Node
-                               NotFoundException
-                               NotInTransactionException
-                               PropertyContainer
-                               Relationship
-                               RelationshipType
-                               ReturnableEvaluator
-                               StopEvaluator
-                               Transaction
-                               TraversalPosition
-                               Traverser
-                               Traverser$Order)))
+  (:import (org.neo4j.graphdb Direction
+                              Node
+                              NotFoundException
+                              NotInTransactionException
+                              PropertyContainer
+                              Relationship
+                              RelationshipType
+                              ReturnableEvaluator
+                              StopEvaluator
+                              Transaction
+                              TraversalPosition
+                              Traverser
+                              Traverser$Order)
+	   (org.neo4j.kernel EmbeddedGraphDatabase)))
 
 (declare properties)
 
@@ -22,7 +21,7 @@
 
 (defn start
   [db-path]
-  (alter-var-root #'*neo* (fn [_] (EmbeddedNeo. db-path))))
+  (alter-var-root #'*neo* (fn [_] (EmbeddedGraphDatabase. db-path))))
 
 (defn shutdown
   []
@@ -49,7 +48,7 @@
 (def all-but-start ReturnableEvaluator/ALL_BUT_START_NODE)
 
 (defmacro with-neo [#^String fname & body ]
-  `(binding [*neo* (new ~EmbeddedNeo ~fname)]
+  `(binding [*neo* (new ~EmbeddedGraphDatabase ~fname)]
     (try ~@body
       (finally (.shutdown *neo*)))))
 
