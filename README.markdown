@@ -4,9 +4,9 @@ The `clojure-neo4j` project provides a lispy interface to [Neo4j](http://neo4j.o
 
 # Get It #
 
-The latest version, [0.0.3-SNAPSHOT](http://clojars.org/clojure-neo4j/versions/0.3.0-SNAPSHOT), is available from clojars.
+The latest version, [0.3.0-SNAPSHOT](http://clojars.org/clojure-neo4j/versions/0.3.0-SNAPSHOT), is available from clojars.
 
-Add `[clojure-neo4j "0.3.0-SNAPSHOT"]` to your project's dependency list and fetch with lein.
+Add `[clojure-neo4j "0.3.0-SNAPSHOT"]` to your project's dependency list and fetch with `lein deps`.
 
 # Building #
 
