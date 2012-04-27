@@ -1,4 +1,4 @@
-(ns neo4j
+(ns neo4j.core
   (:import (org.neo4j.graphdb Direction
                               Node
                               NotFoundException
@@ -16,16 +16,13 @@
 
 (declare properties)
 
-(def *neo* nil)
-(def *tx* nil)
-
-(defn start
-  [db-path]
-  (alter-var-root #'*neo* (fn [_] (EmbeddedGraphDatabase. db-path))))
+(defn open
+  ([#^String db-path]
+     (EmbeddedGraphDatabase. db-path)))
 
 (defn shutdown
-  []
-  (.shutdown *neo*))
+  [db]
+  (.shutdown db))
 
 (def both Direction/BOTH)
 (def incoming Direction/INCOMING)
@@ -47,25 +44,17 @@
 (def all ReturnableEvaluator/ALL)
 (def all-but-start ReturnableEvaluator/ALL_BUT_START_NODE)
 
-(defmacro with-neo [#^String fname & body ]
-  `(binding [*neo* (new ~EmbeddedGraphDatabase ~fname)]
-    (try ~@body
-      (finally (.shutdown *neo*)))))
+(defn success [tx] (.success tx))
 
-(defmacro tx [& body]
-  `(binding [*tx* (.beginTx *neo*)]
-    (try ~@body
-         (finally (.finish *tx*)))))
+(defn failure [tx] (.failure tx))
 
-(defn success [] (.success *tx*))
-
-(defn failure [] (.failure *tx*))
-
-(defmacro with-tx [& body]
-  `(tx
-     (let [val# (do ~@body)]
-       (success)
-       val#)))
+(defmacro with-tx [db & body]
+  `(let [tx# (.beginTx ~db)]
+     (try
+       (let [val# (do ~@body)]
+         (success tx#)
+         val#)
+       (finally (.finish tx#)))))
 
 (defn name-or-str
   [x]
@@ -74,18 +63,18 @@
     (str x)))
 
 (defn new-node 
-  ([] (.createNode *neo*))
-  ([props] (let [node (new-node)]
-             (properties node props)
-             node)))
+  ([db] (.createNode db))
+  ([db props] (let [node (new-node db)]
+                (properties node props)
+                node)))
 
-(defn top-node [] (.getReferenceNode *neo*))
+(defn top-node [db] (.getReferenceNode db))
 
-(defn relationship [#^Keyword n]
+(defn relationship [#^clojure.lang.Keyword n]
   (proxy [RelationshipType] []
     (name [] (name n))))
 
-(defn relate [#^Node from #^Keyword type #^Node to]
+(defn relate [#^Node from #^clojure.lang.Keyword type #^Node to]
   (.createRelationshipTo from to (relationship type)))
 
 (defn return-if [f]
@@ -97,7 +86,7 @@
     (isStopNode [#^TraversalPosition p] (f p))))
 
 (defn property
-  "Necessary?  Maybe remove it in favor of properties."
+  "Return or set single property."
   ([#^PropertyContainer c key]
      (.getProperty c (name key)))
   ([#^PropertyContainer c key val]

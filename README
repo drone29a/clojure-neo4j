@@ -1,26 +1,24 @@
 The clojure-neo4j project provides a more lispy interface to Neo4j, a graph-structured on-disk transactional database.
 
-This library is under active development and there's plenty more work to do.
-
 Usage:
 
 (use ['neo4j :exclude ['start 'shutdown]])
 
-(neo4j/start "/path/to/db")
+(def db (neo4j/start "/path/to/db"))
 
 ;;; Create a root for customers and add a customer.
-(with-tx
-  (let [customer-root (new-node) 
-        bob (new-node)]
-    (relate (top-node) :customers customer-root)
+(with-tx db
+  (let [customer-root (new-node db) 
+        bob (new-node db)]
+    (relate (top-node db) :customers customer-root)
     (relate customer-root :customer bob)
     (properties bob {"name" "Bob"
                      "age" 30
                      "id" "C12345"})))
 
 ;;; Fetch all customer IDs
-(with-tx
-  (let [customer-root (-> (top-node)
+(with-tx db
+  (let [customer-root (-> (top-node db)
                           (.getSingleRelationship (relationship :customers) outgoing)
                           (.getEndNode))]
     (doall (map #(property % "id") 
@@ -30,4 +28,4 @@ Usage:
                           all-but-start
                           {:customer outgoing})))))
 
-(neo4j/shutdown)
+(neo4j/shutdown db)
