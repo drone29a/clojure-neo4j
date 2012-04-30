@@ -14,9 +14,9 @@ Add `[clojure-neo4j "0.3.0-SNAPSHOT"]` to your project's dependency list and fet
 
 # Example #
 
-    (use ['neo4j :exclude ['start 'shutdown]])
+    (require '[neo4j.core :as neo4j])
 
-    (def db (neo4j/start "/path/to/db"))
+    (def db (neo4j/open "/path/to/db"))
 
     ;;; Create a root for customers and add a customer.
     (with-tx db
