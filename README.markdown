@@ -14,9 +14,9 @@ Add `[clojure-neo4j "0.3.0-SNAPSHOT"]` to your project's dependency list and fet
 
 # Example #
 
-    (use ['neo4j :exclude ['start 'shutdown]])
+    (use '[neo4j.core :exclude [open shutdown]])
 
-    (def db (neo4j/start "/path/to/db"))
+    (def db (neo4j.core/open "/path/to/db"))
 
     ;;; Create a root for customers and add a customer.
     (with-tx db
@@ -40,4 +40,4 @@ Add `[clojure-neo4j "0.3.0-SNAPSHOT"]` to your project's dependency list and fet
                               all-but-start
                               {:customer outgoing})))))
 
-    (neo4j/shutdown db)
+    (neo4j.core/shutdown db)
