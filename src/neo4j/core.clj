@@ -12,7 +12,8 @@
                               TraversalPosition
                               Traverser
                               Traverser$Order)
-	   (org.neo4j.kernel EmbeddedGraphDatabase)))
+           (org.neo4j.kernel EmbeddedGraphDatabase)
+           (org.neo4j.tooling GlobalGraphOperations)))
 
 (declare properties)
 
@@ -74,6 +75,7 @@
   (proxy [RelationshipType] []
     (name [] (name n))))
 
+;; TODO: Change arg order
 (defn relate [#^Node from #^clojure.lang.Keyword type #^Node to]
   (.createRelationshipTo from to (relationship type)))
 
@@ -129,3 +131,11 @@ is used to decide which edges to traverse."
   [idx & ids]
   (doall (map (fn [k] (.getSingleNodeFor idx k)) 
               ids)))
+
+(defn all-nodes
+  [db]
+  (.getAllNodes (GlobalGraphOperations/at db)))
+
+(defn all-relationships
+  [db]
+  (.getAllRelationships (GlobalGraphOperations/at db)))
