@@ -133,9 +133,14 @@ is used to decide which edges to traverse."
               ids)))
 
 (defn all-nodes
-  [db]
-  (.getAllNodes (GlobalGraphOperations/at db)))
+  ([db]
+     (seq (.getAllNodes (GlobalGraphOperations/at db))))
+  ([db exclude-refnode]
+     (if exclude-refnode
+       (let [refnode (.getReferenceNode db)]
+         (filter #(not= refnode %) (all-nodes db)))
+       (all-nodes db))))
 
 (defn all-relationships
   [db]
-  (.getAllRelationships (GlobalGraphOperations/at db)))
+  (seq (.getAllRelationships (GlobalGraphOperations/at db))))
