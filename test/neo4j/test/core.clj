@@ -89,3 +89,10 @@
     (is (= 7 (count (neo4j/all-relationships db))))
   
     (neo4j/shutdown db)))
+
+(deftest properties
+  (let [db (neo4j/open (tmp-db-path "properties"))
+        node (neo4j/with-tx db (neo4j/new-node db {"name" "foo"}))]
+    (neo4j/with-tx db
+      (is (nil? (neo4j/property node "dne"))))
+    (neo4j/shutdown db)))

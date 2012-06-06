@@ -90,7 +90,10 @@
 (defn property
   "Return or set single property."
   ([#^PropertyContainer c key]
-     (.getProperty c (name key)))
+     (try
+       (.getProperty c (name key))
+       (catch org.neo4j.graphdb.NotFoundException e
+         nil)))
   ([#^PropertyContainer c key val]
      (.setProperty c (name-or-str key) val)))
 
