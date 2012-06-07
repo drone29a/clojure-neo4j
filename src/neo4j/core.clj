@@ -51,8 +51,8 @@
 
 (defn failure [^Transaction tx] (.failure tx))
 
-(defmacro with-tx [db & body]
-  `(let [tx# (.beginTx ~db)]
+(defmacro with-tx [^AbstractGraphDatabase db & body]
+  `(let [^Transaction tx# (.beginTx ^AbstractGraphDatabase ~db)]
      (try
        (let [val# (do ~@body)]
          (success tx#)
