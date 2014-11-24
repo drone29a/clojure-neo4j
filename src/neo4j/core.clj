@@ -15,13 +15,17 @@
            (org.neo4j.graphdb.index Index)
            (org.neo4j.kernel EmbeddedGraphDatabase
                              AbstractGraphDatabase)
+           (org.neo4j.graphdb.factory GraphDatabaseFactory)
            (org.neo4j.tooling GlobalGraphOperations)))
 
 (declare properties)
 
 (defn open
   ([^String db-path]
-     (EmbeddedGraphDatabase. db-path)))
+     (-> (GraphDatabaseFactory.) (.newEmbeddedDatabase db-path)))
+  ([^String db-path config]
+     ;; TODO: How is config managed in neo4j 2.1.5?
+     (open db-path)))
 
 (defn shutdown
   [^AbstractGraphDatabase db]
@@ -72,8 +76,6 @@
      (let [node (new-node db)]
        (properties node props)
        node)))
-
-(defn top-node [^AbstractGraphDatabase db] (.getReferenceNode db))
 
 (defn relationship [^clojure.lang.Keyword n]
   (proxy [RelationshipType] []
@@ -136,12 +138,7 @@ is used to decide which edges to traverse."
 
 (defn all-nodes
   ([^AbstractGraphDatabase db]
-     (seq (.getAllNodes (GlobalGraphOperations/at db))))
-  ([^AbstractGraphDatabase db exclude-refnode]
-     (if exclude-refnode
-       (let [refnode (.getReferenceNode db)]
-         (filter #(not= refnode %) (all-nodes db)))
-       (all-nodes db))))
+     (seq (.getAllNodes (GlobalGraphOperations/at db)))))
 
 (defn all-relationships
   [^AbstractGraphDatabase db]

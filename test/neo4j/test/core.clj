@@ -32,7 +32,6 @@
         bob (neo4j/with-tx db (neo4j/new-node db {"name" "bob"}))
         carol (neo4j/with-tx db (neo4j/new-node db {"name" "carol"}))]
     (neo4j/with-tx db
-      (neo4j/relate (neo4j/top-node db) :users user-root)
       (neo4j/relate user-root :user alice)
       (neo4j/relate user-root :user bob)
       (neo4j/relate user-root :user carol)
@@ -73,7 +72,6 @@
         bob (neo4j/with-tx db (neo4j/new-node db {"name" "bob"}))
         carol (neo4j/with-tx db (neo4j/new-node db {"name" "carol"}))]
     (neo4j/with-tx db
-      (neo4j/relate (neo4j/top-node db) :users user-root)
       (neo4j/relate user-root :user alice)
       (neo4j/relate user-root :user bob)
       (neo4j/relate user-root :user carol)
@@ -82,11 +80,9 @@
       (neo4j/relate bob :likes carol)
       (neo4j/relate carol :likes alice))
 
-    (is (= 5 (count (neo4j/all-nodes db))))
-    (is (contains? (set (neo4j/all-nodes db)) (.getReferenceNode db)))
-    (is (= 4 (count (neo4j/all-nodes db true))))
-    (is (not (contains? (set (neo4j/all-nodes db true)) (.getReferenceNode db))))
-    (is (= 7 (count (neo4j/all-relationships db))))
+    (neo4j/with-tx db
+      (is (= 4 (count (neo4j/all-nodes db))))
+      (is (= 6 (count (neo4j/all-relationships db)))))
   
     (neo4j/shutdown db)))
 
