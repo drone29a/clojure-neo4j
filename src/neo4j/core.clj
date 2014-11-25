@@ -1,4 +1,6 @@
 (ns neo4j.core
+  (:require [schema.core :as sc]
+            [schema.macros :as sm])
   (:import (org.neo4j.graphdb Direction
                               Node
                               NotFoundException
@@ -13,12 +15,15 @@
                               Traverser
                               Traverser$Order)
            (org.neo4j.graphdb.index Index)
+           (org.neo4j.graphdb DynamicLabel Label)
+           (org.neo4j.graphdb.schema IndexDefinition)
            (org.neo4j.kernel EmbeddedGraphDatabase
                              AbstractGraphDatabase)
            (org.neo4j.graphdb.factory GraphDatabaseFactory)
            (org.neo4j.tooling GlobalGraphOperations)))
 
-(declare properties)
+(declare properties
+         new-label)
 
 (defn open
   ([^String db-path]
@@ -72,10 +77,16 @@
 (defn new-node 
   ([^AbstractGraphDatabase db]
      (.createNode db))
-  ([^AbstractGraphDatabase db props]
+  ([^AbstractGraphDatabase db
+    props]
      (let [node (new-node db)]
        (properties node props)
-       node)))
+       node))
+  ([^AbstractGraphDatabase db
+    ^String label-name
+    props]
+     (doto (new-node db props)
+       (.addLabel (new-label label-name)))))
 
 (defn relationship [^clojure.lang.Keyword n]
   (proxy [RelationshipType] []
@@ -94,7 +105,8 @@
     (isStopNode [^TraversalPosition p] (f p))))
 
 (defn property
-  "Return or set single property."
+  "Return or set single property.
+  Keys are always stored as strings and always returned as keywords."
   ([^PropertyContainer c key]
      (try
        (.getProperty c (name key))
@@ -104,7 +116,8 @@
      (.setProperty c (name-or-str key) val)))
 
 (defn properties 
-  "Return or set a map of properties."
+  "Return or set a map of properties.
+  Keys are always stored as strings and always returned as keywords."
   ([^PropertyContainer c]
      (let [ks (.getPropertyKeys c)]
        (into {} (map (fn [k] [(keyword k) (.getProperty c k)]) ks))))
@@ -112,6 +125,11 @@
      (doseq [[k v] props]
        (.setProperty c (name-or-str k) (or v "")))
      nil))
+
+(defn labels
+  "Return labels of given node."
+  [^Node n]
+  (seq (.getLabels n)))
 
 (defn node-delete 
   "Delete the given node."
@@ -121,12 +139,26 @@
       (.delete r)))
   (.delete n))
 
+(sm/defn new-label :- Label
+  [name :- sc/Str]
+  (DynamicLabel/label name))
+
+(sm/defn new-index :- IndexDefinition
+  [db :- AbstractGraphDatabase
+   label-name :- sc/Str
+   prop-name :- (sc/either sc/Str sc/Keyword)]
+  (-> db
+      (.schema)
+      (.indexFor (new-label label-name))
+      (.on (name-or-str prop-name))
+      (.create)))
+
 (defn traverse
   "Traverse the graph.  Starting at the given node, traverse the graph
-in either bread-first or depth-first order, stopping when the stop-fn returns
-true.  The filter-fn should return true for any node reached during the traversal
-that is to be returned in the sequence.  The map of relationships and directions
-is used to decide which edges to traverse."
+  in either bread-first or depth-first order, stopping when the stop-fn returns
+  true.  The filter-fn should return true for any node reached during the traversal
+  that is to be returned in the sequence.  The map of relationships and directions
+  is used to decide which edges to traverse."
   [^Node start-node order stop-evaluator return-evaluator relationship-direction]
   (.getAllNodes (.traverse start-node 
                            order
@@ -138,8 +170,31 @@ is used to decide which edges to traverse."
 
 (defn all-nodes
   ([^AbstractGraphDatabase db]
-     (seq (.getAllNodes (GlobalGraphOperations/at db)))))
+     (seq (.getAllNodes (GlobalGraphOperations/at db))))
+  ([^AbstractGraphDatabase db
+    ^String label-name]
+     (seq (.getAllNodesWithLabel (GlobalGraphOperations/at db)
+                                 (new-label label-name))))
+  ([^AbstractGraphDatabase db
+    ^String label-name
+    prop-name ; :- (sc/either sc/Str sc/Keyword)
+    ^Object prop-val]
+     (seq (.findNodesByLabelAndProperty db
+                                        (new-label label-name)
+                                        (name-or-str prop-name)
+                                        prop-val))))
 
 (defn all-relationships
   [^AbstractGraphDatabase db]
   (seq (.getAllRelationships (GlobalGraphOperations/at db))))
+
+(defn all-labels
+  [^AbstractGraphDatabase db]
+  (seq (.getAllLabels (GlobalGraphOperations/at db))))
+
+(defn all-indexes
+  ([^AbstractGraphDatabase db]
+     (seq (-> db .schema .getIndexes)))
+  ([^AbstractGraphDatabase db
+    ^String label-name]
+     (seq (-> db .schema (.getIndexes (new-label label-name))))))

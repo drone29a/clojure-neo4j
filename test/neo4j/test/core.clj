@@ -1,15 +1,21 @@
 (ns neo4j.test.core
-  (:require [neo4j.core :as neo4j])
-  (:use [clojure.test]))
+  (:require [neo4j.core :as neo4j]
+            [clojure.test :refer :all]
+            [schema.test]))
+
+(use-fixtures :once schema.test/validate-schemas)
 
 (defn tmp-db-path [name]
   (format "/tmp/clojure-neo4j-tests-%s" name))
 
 (deftest new-node
   (let [db (neo4j/open (tmp-db-path "new-nodes"))
-        node (neo4j/with-tx db (neo4j/new-node db {"name" "foo"}))]
+        node (neo4j/with-tx db (neo4j/new-node db {"name" "foo"}))
+        labeled-node (neo4j/with-tx db (neo4j/new-node db "le label" {"name" "bar"}))]
     (neo4j/with-tx db
-      (is (= "foo" (neo4j/property (.getNodeById db (.getId node)) "name"))))
+      (is (= "foo" (neo4j/property (.getNodeById db (.getId node)) "name")))
+      (is (= "bar" (neo4j/property (.getNodeById db (.getId labeled-node)) "name")))
+      (is (contains? (set (neo4j/labels (.getNodeById db (.getId labeled-node)))) (neo4j/new-label "le label"))))
     (neo4j/shutdown db)))
 
 (deftest relate
@@ -92,3 +98,24 @@
     (neo4j/with-tx db
       (is (nil? (neo4j/property node "dne"))))
     (neo4j/shutdown db)))
+
+(deftest indexing
+  (let [db (neo4j/open (tmp-db-path "indexing"))]
+    (neo4j/with-tx db
+      (neo4j/new-index db "a-label" :a))
+    (neo4j/with-tx db
+      (neo4j/new-node db "a-label" {:a "abc"
+                                    :b 123})
+      (neo4j/new-node db "a-label" {:a "abc"
+                                    :d 456})
+      (neo4j/new-node db "other-label" {:e "aiz"
+                                        :f 136})
+      (is (= 1 (count (neo4j/all-indexes db "a-label"))))
+      (is (= 2 (count (neo4j/all-nodes db "a-label" :a "abc"))))
+      (is (= #{{:a "abc"
+                :b 123}
+               {:a "abc"
+                :d 456}}
+             (->> (neo4j/all-nodes db "a-label" :a "abc")
+                  (map neo4j/properties)
+                  (set)))))))
