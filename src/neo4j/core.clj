@@ -17,7 +17,7 @@
            (org.neo4j.graphdb DynamicLabel Label GraphDatabaseService)
            (org.neo4j.graphdb.schema IndexDefinition)
            (org.neo4j.kernel EmbeddedGraphDatabase)
-           (org.neo4j.graphdb.factory GraphDatabaseFactory)
+           (org.neo4j.graphdb.factory GraphDatabaseFactory GraphDatabaseSettings GraphDatabaseBuilder)
            (org.neo4j.tooling GlobalGraphOperations)))
 
 (declare properties!
@@ -32,10 +32,10 @@
   ([^String db-path]
    (-> (GraphDatabaseFactory.) (.newEmbeddedDatabase db-path)))
   ([^String db-path config]
-   ;; TODO: How is config managed in neo4j 2.1.5?
-   (let [db (open db-path)]
+   (let [builder (-> (GraphDatabaseFactory.) (.newEmbeddedDatabaseBuilder db-path))]
      (doseq [[k v] config]
-       (.setConfig db )))))
+       (.setConfig builder k v))
+     (.newGraphDatabase builder))))
 
 (defn shutdown!
   [^GraphDatabaseService db]
